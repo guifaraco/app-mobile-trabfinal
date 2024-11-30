@@ -15,15 +15,19 @@ data class TaskData(
 )
 
 interface ApiService {
+    // Requisição POST para realizar o login
     @POST("login")
     fun login(@Body request: LoginRequest): Call<LoginResponse>
 
+    // Requisição GET para obter a lista de tarefas
     @GET("identified/getData")
     fun getTasks(@Header("Authorization") token: String): Call<List<TaskResponse>>
 
+    // Requisição POST para salvar uma tarefa
     @POST("identified/saveData")
     fun saveTask(
         @Header("Authorization") token: String,
-        @Body taskData: TaskData  // Enviamos a TaskData como está
+        @Body taskData: TaskData
     ): Call<TaskResponse>
 }
+

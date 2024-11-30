@@ -23,53 +23,62 @@ class CreateActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_create)
 
+        // Obtém o token de autenticação do SharedPreferences
         val sharedPreferences = getSharedPreferences("APP_PREFS", MODE_PRIVATE)
         token = sharedPreferences.getString("auth_token", "") ?: ""
 
+        // Verifica se o token está vazio, caso sim, exibe um erro e encerra a atividade
         if (token.isEmpty()) {
             Toast.makeText(this, "Token de autenticação não encontrado", Toast.LENGTH_SHORT).show()
-            finish()  // Finaliza a activity se o token não estiver presente
+            finish()
             return
         }
 
+        // Inicializa os campos e o botão de salvar tarefa
         val taskDescription = findViewById<EditText>(R.id.task_description)
         val saveTaskButton = findViewById<Button>(R.id.save_task_button)
 
         saveTaskButton.setOnClickListener {
             val description = taskDescription.text.toString()
 
+            // Valida se a descrição da tarefa está vazia
             if (description.isEmpty()) {
                 Toast.makeText(this, "A descrição não pode estar vazia!", Toast.LENGTH_SHORT).show()
             } else {
+                // Chama a função para salvar a tarefa
                 saveTask(description)
             }
         }
     }
 
+    // Função que salva a tarefa através da API
     private fun saveTask(description: String) {
         val apiService = ApiClient.instance.create(ApiService::class.java)
         val taskData = TaskData(description)
 
+        // Faz a requisição para salvar a tarefa
         val call = apiService.saveTask("Bearer $token", taskData)
 
         call.enqueue(object : Callback<TaskResponse> {
             override fun onResponse(call: Call<TaskResponse>, response: Response<TaskResponse>) {
+                // Se a resposta for bem-sucedida, exibe uma mensagem e fecha a atividade
                 if (response.isSuccessful) {
                     Toast.makeText(this@CreateActivity, "Tarefa criada com sucesso!", Toast.LENGTH_SHORT).show()
 
-                    // Retornar para a ListActivity com o resultado OK
                     setResult(RESULT_OK)
-                    finish()  // Finaliza a activity e volta para a ListActivity
+                    finish()
                 } else {
                     Toast.makeText(this@CreateActivity, "Erro ao criar tarefa: ${response.code()}", Toast.LENGTH_SHORT).show()
                 }
             }
 
+            // Caso ocorra um erro de conexão
             override fun onFailure(call: Call<TaskResponse>, t: Throwable) {
                 Toast.makeText(this@CreateActivity, "Erro na conexão: ${t.message}", Toast.LENGTH_SHORT).show()
             }
         })
     }
 }
+
 
 

@@ -21,40 +21,41 @@ class ActivityHome : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
 
-        // Referenciar os elementos do layout
+        // Inicializa os campos de entrada e o botão de login
         val etUsername = findViewById<EditText>(R.id.etUsername)
         val btnLogin = findViewById<Button>(R.id.btnLogin)
 
-        // Configurar o botão de login
         btnLogin.setOnClickListener {
             val username = etUsername.text.toString()
 
+            // Valida se o campo de nome de usuário está vazio
             if (username.isEmpty()) {
                 Toast.makeText(this, "Por favor, insira seu nome de usuário", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            // Fazer login
+            // Chama a função de login
             performLogin(username)
         }
     }
 
+    // Função que realiza o login na API
     private fun performLogin(username: String) {
         val apiService = ApiClient.instance.create(ApiService::class.java)
         val call = apiService.login(LoginRequest(username))
 
+        // Faz a requisição para a API
         call.enqueue(object : Callback<LoginResponse> {
             override fun onResponse(call: Call<LoginResponse>, response: Response<LoginResponse>) {
+                // Se a resposta for bem-sucedida, salva o token e segue para a tela de lista
                 if (response.isSuccessful) {
                     val token = response.body()?.token
                     if (!token.isNullOrEmpty()) {
-                        // Armazene o token (em SharedPreferences, por exemplo)
                         val sharedPreferences = getSharedPreferences("APP_PREFS", MODE_PRIVATE)
                         sharedPreferences.edit().putString("auth_token", token).apply()
 
                         Toast.makeText(this@ActivityHome, "Login bem-sucedido!", Toast.LENGTH_SHORT).show()
 
-                        // Navegue para a próxima tela
                         val intent = Intent(this@ActivityHome, ListActivity::class.java)
                         startActivity(intent)
                     } else {
@@ -65,7 +66,7 @@ class ActivityHome : AppCompatActivity() {
                 }
             }
 
-
+            // Caso ocorra um erro de conexão
             override fun onFailure(call: Call<LoginResponse>, t: Throwable) {
                 Toast.makeText(this@ActivityHome, "Erro na conexão: ${t.message}", Toast.LENGTH_SHORT).show()
             }
