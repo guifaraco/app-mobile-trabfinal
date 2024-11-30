@@ -24,37 +24,31 @@ class ListActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_list)
 
-        // Obtendo o token passado pela Intent
-        token = intent.getStringExtra("token") ?: ""
+        val sharedPreferences = getSharedPreferences("APP_PREFS", MODE_PRIVATE)
+        token = sharedPreferences.getString("auth_token", "") ?: ""
+
+        if (token.isEmpty()) {
+            Toast.makeText(this, "Token de autenticação não encontrado", Toast.LENGTH_SHORT).show()
+            return
+        }
 
         val addTaskButton = findViewById<Button>(R.id.add_task_button)
 
-        // Configurando o RecyclerView
         recyclerView = findViewById(R.id.task_list)
         recyclerView.layoutManager = LinearLayoutManager(this)
         adapter = TaskAdapter(listOf())
         recyclerView.adapter = adapter
 
-        // Buscar tarefas ao carregar a tela
         fetchTasks()
 
         addTaskButton.setOnClickListener {
             val intent = Intent(this, CreateActivity::class.java)
-            intent.putExtra("token", token)
-            startActivity(intent)
+            intent.putExtra("TOKEN", token)
+            startActivityForResult(intent, CREATE_TASK_REQUEST_CODE)  // Usando startActivityForResult
         }
-        
     }
 
     private fun fetchTasks() {
-        val sharedPreferences = getSharedPreferences("APP_PREFS", MODE_PRIVATE)
-        val token = sharedPreferences.getString("auth_token", null)
-
-        if (token.isNullOrEmpty()) {
-            Toast.makeText(this, "Token de autenticação não encontrado", Toast.LENGTH_SHORT).show()
-            return
-        }
-
         val apiService = ApiClient.instance.create(ApiService::class.java)
         val call = apiService.getTasks("Bearer $token")
 
@@ -73,4 +67,19 @@ class ListActivity : AppCompatActivity() {
             }
         })
     }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (requestCode == CREATE_TASK_REQUEST_CODE && resultCode == RESULT_OK) {
+            // Se a tarefa foi criada com sucesso, atualizar a lista
+            fetchTasks()
+        }
+    }
+
+    companion object {
+        const val CREATE_TASK_REQUEST_CODE = 1001  // Código para a solicitação de criação de tarefa
+    }
 }
+
+

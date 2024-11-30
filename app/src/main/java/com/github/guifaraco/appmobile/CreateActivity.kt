@@ -23,10 +23,9 @@ class CreateActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_create)
 
-        // Recebendo o token da Activity anterior
-        token = intent.getStringExtra("token") ?: ""
+        val sharedPreferences = getSharedPreferences("APP_PREFS", MODE_PRIVATE)
+        token = sharedPreferences.getString("auth_token", "") ?: ""
 
-        // Verificação se o token está vazio ou não
         if (token.isEmpty()) {
             Toast.makeText(this, "Token de autenticação não encontrado", Toast.LENGTH_SHORT).show()
             finish()  // Finaliza a activity se o token não estiver presente
@@ -49,28 +48,28 @@ class CreateActivity : AppCompatActivity() {
 
     private fun saveTask(description: String) {
         val apiService = ApiClient.instance.create(ApiService::class.java)
-
-        // Mapeando o campo `description` para o formato esperado pela API
         val taskData = TaskData(description)
 
-        // Enviando a tarefa para a API
         val call = apiService.saveTask("Bearer $token", taskData)
 
         call.enqueue(object : Callback<TaskResponse> {
             override fun onResponse(call: Call<TaskResponse>, response: Response<TaskResponse>) {
                 if (response.isSuccessful) {
                     Toast.makeText(this@CreateActivity, "Tarefa criada com sucesso!", Toast.LENGTH_SHORT).show()
-                    finish()  // Finaliza a activity e volta para a tela anterior
+
+                    // Retornar para a ListActivity com o resultado OK
+                    setResult(RESULT_OK)
+                    finish()  // Finaliza a activity e volta para a ListActivity
                 } else {
                     Toast.makeText(this@CreateActivity, "Erro ao criar tarefa: ${response.code()}", Toast.LENGTH_SHORT).show()
-                    Log.e("CreateActivity", "Erro: ${response.message()}")  // Log da mensagem de erro
                 }
             }
 
             override fun onFailure(call: Call<TaskResponse>, t: Throwable) {
                 Toast.makeText(this@CreateActivity, "Erro na conexão: ${t.message}", Toast.LENGTH_SHORT).show()
-                Log.e("CreateActivity", "Falha na requisição: ${t.message}")
             }
         })
     }
 }
+
+
