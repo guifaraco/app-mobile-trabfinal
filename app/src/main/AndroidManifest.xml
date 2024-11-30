@@ -23,6 +23,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Tela de listagem -->
+        <activity android:name=".ListActivity" />
+
+        <!-- Tela de criação -->
+        <activity android:name=".CreateActivity" />
     </application>
 
 

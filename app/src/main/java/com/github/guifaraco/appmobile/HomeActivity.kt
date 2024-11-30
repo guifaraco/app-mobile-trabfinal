@@ -1,5 +1,6 @@
 package com.github.guifaraco.appmobile
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
@@ -46,11 +47,24 @@ class ActivityHome : AppCompatActivity() {
             override fun onResponse(call: Call<LoginResponse>, response: Response<LoginResponse>) {
                 if (response.isSuccessful) {
                     val token = response.body()?.token
-                    Toast.makeText(this@ActivityHome, "Login bem-sucedido! Token: $token", Toast.LENGTH_LONG).show()
+                    if (!token.isNullOrEmpty()) {
+                        // Armazene o token (em SharedPreferences, por exemplo)
+                        val sharedPreferences = getSharedPreferences("APP_PREFS", MODE_PRIVATE)
+                        sharedPreferences.edit().putString("auth_token", token).apply()
+
+                        Toast.makeText(this@ActivityHome, "Login bem-sucedido!", Toast.LENGTH_SHORT).show()
+
+                        // Navegue para a próxima tela
+                        val intent = Intent(this@ActivityHome, ListActivity::class.java)
+                        startActivity(intent)
+                    } else {
+                        Toast.makeText(this@ActivityHome, "Token não recebido", Toast.LENGTH_SHORT).show()
+                    }
                 } else {
                     Toast.makeText(this@ActivityHome, "Falha no login: ${response.code()}", Toast.LENGTH_SHORT).show()
                 }
             }
+
 
             override fun onFailure(call: Call<LoginResponse>, t: Throwable) {
                 Toast.makeText(this@ActivityHome, "Erro na conexão: ${t.message}", Toast.LENGTH_SHORT).show()
